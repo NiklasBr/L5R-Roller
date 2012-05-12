@@ -63,24 +63,45 @@ function build_array($result, $sum) {
 }
 
 // Returns the average result (rounded to one decimal) of the roll
-function calculate_average($result, $sum) {
+function calculate_average($results, $sum) {
     $total = 0;
-    foreach ($result as $result=>$rolls) {
+    foreach ($results as $result=>$rolls) {
         $total =  $total + ($result*$rolls);
     }
     return round($total/$sum, 1);
 }
 
+// Returns the standard deviations or each result (rounded to one decimal) of the roll
+function calculate_std_deviation($results, $sum) {
+    $diff_sum = 0;
+    $total = 0;
+    
+    // First calculate mean
+    foreach ($results as $result=>$rolls) {
+         $total =  $total + ($result*$rolls);
+     }
+     $mean = $total/$sum;
+     
+     // Then calculate the difference from the mean
+     foreach ($results as $result=>$rolls) {
+         // a number of times equal to $rolls, do this with $result
+         for ($i = 0; $i < $rolls; $i++) {
+             // Then calculate mean of $diff_array
+             $diff_sum = $diff_sum+pow($result-$mean, 2);
+         }
+     }
+
+    // Return the square root of the average of 
+    return round(sqrt($diff_sum/$sum), 2);
+}
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <!--
         Curious, eh? Nice! 
-        
-        Go ahead, have a look at the code,
-        I am currently planning on releaseing this thing as open source
-        but I need some extra time and effort to do so.
+
+        Want to fork and build your own version? Have a look at https://github.com/NiklasBr/L5R-Roller        
         
         Come back soon. You are the best!
         
@@ -238,6 +259,14 @@ function calculate_average($result, $sum) {
 <?php
                     foreach ($processed_results as $key=>$result) {
                         echo "\t\t\t\t'" , $key , "' : " , calculate_average($result, $sums[$key]) , ",\n";
+                    }?>
+                        };
+
+            // Standard deviations
+            $.data.std_deviations = {
+<?php
+                    foreach ($processed_results as $key=>$result) {
+                        echo "\t\t\t\t'" , $key , "' : " , calculate_std_deviation($result, $sums[$key]) , ",\n";
                     }?>
                         };
 
