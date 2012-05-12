@@ -2,14 +2,18 @@
 import random, types, shelve
 from collections import defaultdict
 
-# 550M per XkY + exploderade
-iterations = 10000000
+# Start with 1M iterations
+iterations = 1 * 1000 * 1000
+# Start on first iteration
 current_iteration = 1
-saved_data = []
+# Don't keep any results above 150 since they will be so extremely uncommon anyway
 count_max = 150
+# Lowest possible score
 count_min = 1
+# Creates a dictionary to save the final sum into, in the format result:number_of_rolls_achieving_this_result
 counter_dict = defaultdict(int)
 
+# This is a short text UI that asks for which rolls to be made
 def roll_function():
     rolled_raw = input("Roll ")
     try:
