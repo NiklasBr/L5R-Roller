@@ -4,50 +4,34 @@ try {
 	 * Get results from the database, first normal, then with emphases. Also, the db has
 	 * results available for up to 'result' = 150, but that is so exceedingly rare that we 
 	 * only go to 110.
+	 * 
+	 * Using a space for key for the first set of results might seem odd, but it will be 
+	 * removed by the trim() when processing the results. This because the default result.
 	 */
 	$database = new PDO('mysql:host=127.0.0.1;dbname=l5r', 'root', '');
-	$results = $database->query('select * from `explode_no_emphasis` where `result` < 111 order by `roll`');
-	$results_e = $database->query('select * from `explode_and_emphasis` where `result` < 111 order by `roll`');
-	$results_no_explode = $database->query('select * from `no_explode_no_emphasis` where `result` < 111 order by `roll`');
-	$results_e_no_explode = $database->query('select * from `no_explode_and_emphasis` where `result` < 111 order by `roll`');
-	$results_9 = $database->query('select * from `explode_9_10_no_emphasis` where `result` < 111 order by `roll`');
-	$results_e_9 = $database->query('select * from `explode_9_10_and_emphasis` where `result` < 111 order by `roll`');
+	$results[' '] = $database->query('select * from `explode_no_emphasis` where `result` < 111 order by `roll`');
+	$results['e'] = $database->query('select * from `explode_and_emphasis` where `result` < 111 order by `roll`');
+	$results['ne'] = $database->query('select * from `no_explode_no_emphasis` where `result` < 111 order by `roll`');
+	$results['e_ne'] = $database->query('select * from `no_explode_and_emphasis` where `result` < 111 order by `roll`');
+	$results['_e9'] = $database->query('select * from `explode_9_10_no_emphasis` where `result` < 111 order by `roll`');
+	$results['e_e9'] = $database->query('select * from `explode_9_10_and_emphasis` where `result` < 111 order by `roll`');
 	$database = null;
 } catch (PDOException $e) {
-    /* fail gracefully and go on */
+    /* 
+     * Fail gracefully and go on 
+    var_dump($e);
+    */
 }
 
-// Process the database queries, first normal, then with emphases
-foreach ($results as $result) {
-    $key = $result['roll'] . 'k' . $result['keep'];
-    $processed_results[$key][$result['result']] = $result['count']*1;
-    $sums[$key] = calculate_sums($processed_results[$key]);
+// Process the database queries
+foreach ($results as $key=>$part) {
+    foreach ($part as $result) {
+        $type = trim($result['roll'] . 'k' . $result['keep'] . $key);
+        $processed_results[$type][$result['result']] = $result['count']*1;
+        $sums[$type] = calculate_sums($processed_results[$type]);
+    }
 }
-foreach ($results_e as $result) {
-    $key = $result['roll'] . 'k' . $result['keep'] . 'e';
-    $processed_results[$key][$result['result']] = $result['count'];
-    $sums[$key] = calculate_sums($processed_results[$key]);
-}
-foreach ($results_no_explode as $result) {
-    $key = $result['roll'] . 'k' . $result['keep'] . 'ne';
-    $processed_results[$key][$result['result']] = $result['count'];
-    $sums[$key] = calculate_sums($processed_results[$key]);
-}
-foreach ($results_e_no_explode as $result) {
-    $key = $result['roll'] . 'k' . $result['keep'] . 'e_ne';
-    $processed_results[$key][$result['result']] = $result['count'];
-    $sums[$key] = calculate_sums($processed_results[$key]);
-}
-foreach ($results_9 as $result) {
-    $key = $result['roll'] . 'k' . $result['keep'] . '_e9';
-    $processed_results[$key][$result['result']] = $result['count']*1;
-    $sums[$key] = calculate_sums($processed_results[$key]);
-}
-foreach ($results_e_9 as $result) {
-    $key = $result['roll'] . 'k' . $result['keep'] . 'e_e9';
-    $processed_results[$key][$result['result']] = $result['count']*1;
-    $sums[$key] = calculate_sums($processed_results[$key]);
-}
+
 
 // Calculates sums by taking each DB query result and adding to the $sums array
 function calculate_sums($numbers) {
