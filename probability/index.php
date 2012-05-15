@@ -303,43 +303,43 @@ function print_js_dict($array) {
 
                 // Match each into a row for a nice navigation
                 if (value.match(/k1$/)) {
-                    $("#navigation #xk1").append(new_button);
+                    $("#xk1").append(new_button);
                 }
 
                 else if (value.match(/k2$/)) {
-                    $("#navigation #xk2").append(new_button);
+                    $("#xk2").append(new_button);
                 }
 
                 else if (value.match(/k3$/)) {
-                    $("#navigation #xk3").append(new_button);
+                    $("#xk3").append(new_button);
                 }
 
                 else if (value.match(/k4$/)) {
-                    $("#navigation #xk4").append(new_button);
+                    $("#xk4").append(new_button);
                 }
 
                 else if (value.match(/k5$/)) {
-                    $("#navigation #xk5").append(new_button);
+                    $("#xk5").append(new_button);
                 }
 
                 else if (value.match(/k6$/)) {
-                    $("#navigation #xk6").append(new_button);
+                    $("#xk6").append(new_button);
                 }
 
                 else if (value.match(/k7$/)) {
-                    $("#navigation #xk7").append(new_button);
+                    $("#xk7").append(new_button);
                 }
 
                 else if (value.match(/k8$/)) {
-                    $("#navigation #xk8").append(new_button);
+                    $("#xk8").append(new_button);
                 }
 
                 else if (value.match(/k9$/)) {
-                    $("#navigation #xk9").append(new_button);
+                    $("#xk9").append(new_button);
                 }
 
                 else if (value.match(/k10$/)) {
-                    $("#navigation #xk10").append(new_button);
+                    $("#xk10").append(new_button);
                 }
 
             });
