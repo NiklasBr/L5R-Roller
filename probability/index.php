@@ -87,10 +87,13 @@ foreach ($processed_results as $roll_type=>$results) {
      * Then calculate the difference from the mean
      */
     foreach ($results as $result=>$rolls) {
-        $diff_sum = $diff_sum + $rolls * (pow($result - $averages[$roll_type], 2));
+        $diff_sum = $diff_sum + ($rolls * (pow($result - $averages[$roll_type], 2)));
     }
 
-    // Save the square root of the average of the diffs, rounded to one decimal
+    /*
+     * Save the square root of the average of the diffs, rounded to one decimal
+     *
+     */
     $standard_deviations[$roll_type] = round(sqrt($diff_sum / $sums[$roll_type]), 1);
 }
 
@@ -101,7 +104,7 @@ foreach ($processed_results as $roll_type=>$results) {
  */
 function print_js_dict($array) {
     foreach ($array as $key=>$part) {
-        echo "\t\t\t\t'" , $key , "' : " , $part , ",\n";
+        echo "                '" , $key , "' : " , $part , ",\n";
     }
 }
 
@@ -166,7 +169,7 @@ function print_js_dict($array) {
                     sum = sum + divided_data[count][1];
                 }
 
-                // Updates numbers
+                // Updates visible numbers
                 $("#percent").text(Math.round(sum));
                 $("#average").text($.data.averages[get_context()]);
                 $("#std_deviation").text($.data.std_deviations[get_context()]);
@@ -179,8 +182,8 @@ function print_js_dict($array) {
 
                 results_plot.title.text = "Rolling " + $(this).attr("data-roll") + ', exploding dice';
                 calc_perc_and_avg($("#target").val());
-                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
-                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
+//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
+//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
                 results_plot.series[0].data = $.data.plots[get_context()];
                 results_plot.replot();
 
@@ -198,8 +201,8 @@ function print_js_dict($array) {
             // Looks for changes in the emphasis and explode check boxes
             $(document).on('change', '#emphasis, #explode, #explode_9_and_10', function() {
                 calc_perc_and_avg($("#target").val());
-                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
-                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
+//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
+//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
                 results_plot.series[0].data = $.data.plots[get_context()];
                 results_plot.replot();
             });
@@ -236,16 +239,16 @@ function print_js_dict($array) {
                                             tooltipFormatString: "TN: %'d",
                                             showTooltipPrecision: 0.5
                                         }},
-                                        {verticalLine: {
-                                            name: "standard_deviation",
-                                            x: 0,
-                                            color: "rgba(150, 150, 150, 0.3)",
-                                            yOffset: 0,
-                                            shadow: false,
-                                            showTooltip: true,
-                                            tooltipFormatString: "± one standard deviation",
-                                            showTooltipPrecision: 0.5
-                                        }},
+//                                         {verticalLine: {
+//                                             name: "standard_deviation",
+//                                             x: 0,
+//                                             color: "rgba(150, 150, 150, 0.3)",
+//                                             yOffset: 0,
+//                                             shadow: false,
+//                                             showTooltip: true,
+//                                             tooltipFormatString: "± one standard deviation",
+//                                             showTooltipPrecision: 0.5
+//                                         }},
                                         ]
                             },
                 axesDefaults:
@@ -354,11 +357,10 @@ function print_js_dict($array) {
                 $("#navigation input:first").addClass("active");
             }
             calc_perc_and_avg($("#target").val());
-
             var results_plot = $.jqplot("chart", [$.data.plots[get_context()]], $.data.rollDefaults);
             results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll") + ', exploding dice';
-            results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
-            results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
+//            results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
+//            results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
             results_plot.replot();
 
         });
