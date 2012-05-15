@@ -1,21 +1,21 @@
 <?php
 try {
-	/* 
-	 * Get results from the database, first normal, then with emphases. Also, the db has
-	 * results available for up to 'result' = 150, but that is so exceedingly rare that we 
-	 * only go to 110.
-	 * 
-	 * Using a space for key for the first set of results might seem odd, but it will be 
-	 * removed by the trim() when processing the results. This because the default result.
-	 */
-	$database = new PDO('mysql:host=127.0.0.1;dbname=l5r', 'root', '');
-	$results[' ']    = $database->query('select * from `explode_no_emphasis` where `result` < 111 order by `roll`;');
-	$results['e']    = $database->query('select * from `explode_and_emphasis` where `result` < 111 order by `roll`;');
-	$results['ne']   = $database->query('select * from `no_explode_no_emphasis` where `result` < 111 order by `roll`;');
-	$results['e_ne'] = $database->query('select * from `no_explode_and_emphasis` where `result` < 111 order by `roll`;');
-	$results['_e9']  = $database->query('select * from `explode_9_10_no_emphasis` where `result` < 111 order by `roll`;');
-	$results['e_e9'] = $database->query('select * from `explode_9_10_and_emphasis` where `result` < 111 order by `roll`;');
-	$database = null;
+    /*
+     * Get results from the database, first normal, then with emphases. Also, the db has
+     * results available for up to 'result' = 150, but that is so exceedingly rare that we
+     * only go to 110.
+     *
+     * Using a space for key for the first set of results might seem odd, but it will be
+     * removed by the trim() when processing the results. This because the default result.
+     */
+    $database = new PDO('mysql:host=127.0.0.1;dbname=l5r', 'root', '');
+    $results[' ']    = $database->query('select * from `explode_no_emphasis` where `result` < 111 order by `roll`;');
+    $results['e']    = $database->query('select * from `explode_and_emphasis` where `result` < 111 order by `roll`;');
+    $results['ne']   = $database->query('select * from `no_explode_no_emphasis` where `result` < 111 order by `roll`;');
+    $results['e_ne'] = $database->query('select * from `no_explode_and_emphasis` where `result` < 111 order by `roll`;');
+    $results['_e9']  = $database->query('select * from `explode_9_10_no_emphasis` where `result` < 111 order by `roll`;');
+    $results['e_e9'] = $database->query('select * from `explode_9_10_and_emphasis` where `result` < 111 order by `roll`;');
+    $database = null;
 } catch (PDOException $e) {
     /* 
      * Fail gracefully and go on 
@@ -56,16 +56,16 @@ foreach ($processed_results as $roll_type=>$results) {
     $total = 0;
 
     $js_array[$roll_type] = '[';
-    foreach ($results as $result=>$rolls) {        
+    foreach ($results as $result=>$rolls) {
         /* 
          * Creates an array with our data to use with on page Javascript.
          *
-         * If less than ten rolls in the row have a result there are so few that effectively a 
-         * zero will work. We therefore return a 0 because JS might choke on extremely small 
+         * If less than ten rolls in the row have a result there are so few that effectively a
+         * zero will work. We therefore return a 0 because JS might choke on extremely small
          * floats otherwise. Saves the percentage value in a list.
          *
          */
-        $total =  $total + ($result * $rolls);
+        $total = $total + ($result * $rolls);
 
         if ($rolls > 10) {
             $js_array[$roll_type] .= '[' . $result . ',' . $rolls/$sums[$roll_type]*100 . '],';
@@ -78,7 +78,7 @@ foreach ($processed_results as $roll_type=>$results) {
 
     // Calculate averages. Saves the average result (rounded to one decimal) of the roll
     $averages[$roll_type] = round($total/$sums[$roll_type], 1);
-    
+
     /*
      * Saves the standard deviations or each result (rounded to one decimal) of the roll
      * a number of times equal to $rolls, do this with $result
@@ -89,7 +89,7 @@ foreach ($processed_results as $roll_type=>$results) {
     foreach ($results as $result=>$rolls) {
         $diff_sum = $diff_sum + $rolls * (pow($result - $averages[$roll_type], 2));
     }
-        
+
     // Save the square root of the average of the diffs, rounded to one decimal
     $standard_deviations[$roll_type] = round(sqrt($diff_sum / $sums[$roll_type]), 1);
 }
@@ -113,8 +113,8 @@ function print_js_dict($array) {
         Curious, eh? Nice!
         Want to fork and build your own version? Have a look at https://github.com/NiklasBr/L5R-Roller
         Come back soon. You are the best!
-        
-         // Niklas Brunberg, fyrkantigt.se/en/projekt/wikipics
+
+        // Niklas Brunberg, fyrkantigt.se/en/projekt/wikipics
     -->
     <title>L5R Roll and Keep Probabilities</title>
     <link rel="stylesheet" type="text/css" href="/style.css">
@@ -160,41 +160,41 @@ function print_js_dict($array) {
             function calc_perc_and_avg(break_at) {
                 var current_data = $.data.plots[get_context()];
                 var divided_data = current_data.slice((break_at-1), current_data.length);
-            
+
                 var sum = 0;
                 for (var count = 0; count < divided_data.length; count++) {
                     sum = sum + divided_data[count][1];
                 }
-                
+
                 // Updates numbers
                 $("#percent").text(Math.round(sum));
                 $("#average").text($.data.averages[get_context()]);
                 $("#std_deviation").text($.data.std_deviations[get_context()]);
             }
-            
+
             // Looks for clicks on the navigation buttons
             $(document).on('click', '#navigation input', function(event) {
                 $(this).addClass('active');
                 $('#navigation input').not(this).removeClass('active');
-                
+
                 results_plot.title.text = "Rolling " + $(this).attr("data-roll") + ', exploding dice';
                 calc_perc_and_avg($("#target").val());
                 results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
                 results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
                 results_plot.series[0].data = $.data.plots[get_context()];
                 results_plot.replot();
-                
+
                 // Update link for permalinks to certain rolls
                 document.location.hash = $('#navigation input.active').attr("data-roll");
             });
-            
+
             // Looks for changes in the TN input box
             $(document).on('input', '#target', function() {
                 calc_perc_and_avg($(this).val());
                 results_plot.plugins.canvasOverlay.get("target_number").options.x = $("#target").val();
                 results_plot.replot();
             });
-        
+
             // Looks for changes in the emphasis and explode check boxes
             $(document).on('change', '#emphasis, #explode, #explode_9_and_10', function() {
                 calc_perc_and_avg($("#target").val());
@@ -203,7 +203,7 @@ function print_js_dict($array) {
                 results_plot.series[0].data = $.data.plots[get_context()];
                 results_plot.replot();
             });
-            
+
             $.data.averages = {};
             $.data.plots = {};
             $.data.rollDefaults = {
@@ -276,8 +276,7 @@ function print_js_dict($array) {
                             }
                     } // End axes settings
             } // End plot data & settings
-            
-            
+
             // Averages
             $.data.averages = {
 <?php           print_js_dict($averages); ?>
@@ -292,7 +291,7 @@ function print_js_dict($array) {
             $.data.plots = {
 <?php           print_js_dict($js_array); ?>
             };
-            
+
             // Builds the navigation buttons
             $.each($.data.plots, function(value) {
 
@@ -301,12 +300,12 @@ function print_js_dict($array) {
                     .val(value.replace("r", ""))
                     .attr("data-roll", value)
                     .attr("class", value);
-                
+
                 // Match each into a row for a nice navigation
                 if (value.match(/k1$/)) {
                     $("#navigation #xk1").append(new_button);
                 }
-                
+
                 else if (value.match(/k2$/)) {
                     $("#navigation #xk2").append(new_button);
                 }
@@ -314,7 +313,7 @@ function print_js_dict($array) {
                 else if (value.match(/k3$/)) {
                     $("#navigation #xk3").append(new_button);
                 }
-                
+
                 else if (value.match(/k4$/)) {
                     $("#navigation #xk4").append(new_button);
                 }
@@ -322,7 +321,7 @@ function print_js_dict($array) {
                 else if (value.match(/k5$/)) {
                     $("#navigation #xk5").append(new_button);
                 }
-                
+
                 else if (value.match(/k6$/)) {
                     $("#navigation #xk6").append(new_button);
                 }
@@ -330,21 +329,21 @@ function print_js_dict($array) {
                 else if (value.match(/k7$/)) {
                     $("#navigation #xk7").append(new_button);
                 }
-                
+
                 else if (value.match(/k8$/)) {
                     $("#navigation #xk8").append(new_button);
                 }
-                
+
                 else if (value.match(/k9$/)) {
                     $("#navigation #xk9").append(new_button);
                 }
-                
+
                 else if (value.match(/k10$/)) {
                     $("#navigation #xk10").append(new_button);
                 }
 
             });
-            
+
             // Check the location hash to see if any roll is saved and activate that roll if true, else activate the first roll/button
             if (document.location.hash.length > 0) {
                 var reg = new RegExp("#");
@@ -355,7 +354,7 @@ function print_js_dict($array) {
                 $("#navigation input:first").addClass("active");
             }
             calc_perc_and_avg($("#target").val());
-            
+
             var results_plot = $.jqplot("chart", [$.data.plots[get_context()]], $.data.rollDefaults);
             results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll") + ', exploding dice';
             results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
@@ -391,7 +390,7 @@ function print_js_dict($array) {
         <div id="xk7" class="group"></div>
         <div id="xk8" class="group"></div>
         <div id="xk9" class="group"></div>
-        <div id="xk10" class="group"></div>    
+        <div id="xk10" class="group"></div>
     </div>
     <footer>
         <span class="deco"></span>
