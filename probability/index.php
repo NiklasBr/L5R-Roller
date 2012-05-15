@@ -86,8 +86,10 @@ foreach ($processed_results as $roll_type=>$results) {
      * Then calculate mean of $diff_array
      * Then calculate the difference from the mean
      */
-    $diff_sum = $diff_sum + $rolls * (pow($rolls * $result - $averages[$roll_type], 2));
-    
+    foreach ($results as $result=>$rolls) {
+        $diff_sum = $diff_sum + $rolls * (pow($result - $averages[$roll_type], 2));
+    }
+        
     // Save the square root of the average of the diffs, rounded to one decimal
     $standard_deviations[$roll_type] = round(sqrt($diff_sum / $sums[$roll_type]), 1);
 }
@@ -108,10 +110,8 @@ function print_js_dict($array) {
 <head>
     <meta charset="utf-8" />
     <!--
-        Curious, eh? Nice! 
-
-        Want to fork and build your own version? Have a look at https://github.com/NiklasBr/L5R-Roller        
-        
+        Curious, eh? Nice!
+        Want to fork and build your own version? Have a look at https://github.com/NiklasBr/L5R-Roller
         Come back soon. You are the best!
         
          // Niklas Brunberg, fyrkantigt.se/en/projekt/wikipics
@@ -166,8 +166,10 @@ function print_js_dict($array) {
                     sum = sum + divided_data[count][1];
                 }
                 
+                // Updates numbers
                 $("#percent").text(Math.round(sum));
                 $("#average").text($.data.averages[get_context()]);
+                $("#std_deviation").text($.data.std_deviations[get_context()]);
             }
             
             // Looks for clicks on the navigation buttons
@@ -177,6 +179,8 @@ function print_js_dict($array) {
                 
                 results_plot.title.text = "Rolling " + $(this).attr("data-roll") + ', exploding dice';
                 calc_perc_and_avg($("#target").val());
+                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
+                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
                 results_plot.series[0].data = $.data.plots[get_context()];
                 results_plot.replot();
                 
@@ -187,7 +191,6 @@ function print_js_dict($array) {
             // Looks for changes in the TN input box
             $(document).on('input', '#target', function() {
                 calc_perc_and_avg($(this).val());
-                $.data.rollDefaults['canvasOverlay']['objects'][0]['verticalLine']['x'] = $("#target").val();
                 results_plot.plugins.canvasOverlay.get("target_number").options.x = $("#target").val();
                 results_plot.replot();
             });
@@ -195,6 +198,8 @@ function print_js_dict($array) {
             // Looks for changes in the emphasis and explode check boxes
             $(document).on('change', '#emphasis, #explode, #explode_9_and_10', function() {
                 calc_perc_and_avg($("#target").val());
+                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
+                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
                 results_plot.series[0].data = $.data.plots[get_context()];
                 results_plot.replot();
             });
@@ -224,11 +229,21 @@ function print_js_dict($array) {
                                         {verticalLine: {
                                             name: "target_number",
                                             x: $("#target").val(),
-                                            color: "#dbac6f",
+                                            color: "rgba(211, 144, 57, 0.6)",
                                             yOffset: 0,
                                             shadow: false,
                                             showTooltip: true,
-                                            tooltipFormatString: "TN %'d",
+                                            tooltipFormatString: "TN: %'d",
+                                            showTooltipPrecision: 0.5
+                                        }},
+                                        {verticalLine: {
+                                            name: "standard_deviation",
+                                            x: 0,
+                                            color: "rgba(150, 150, 150, 0.3)",
+                                            yOffset: 0,
+                                            shadow: false,
+                                            showTooltip: true,
+                                            tooltipFormatString: "± one standard deviation",
                                             showTooltipPrecision: 0.5
                                         }},
                                         ]
@@ -343,6 +358,8 @@ function print_js_dict($array) {
             
             var results_plot = $.jqplot("chart", [$.data.plots[get_context()]], $.data.rollDefaults);
             results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll") + ', exploding dice';
+            results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
+            results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = ($.data.std_deviations[get_context()]*2) + "px";
             results_plot.replot();
 
         });
@@ -352,7 +369,7 @@ function print_js_dict($array) {
     <div id="notice"><p class="no-js">This page contains interactive elements, to use it you need to activate JavaScript.</p></div>
     <div id="chart"></div>
     <div id="result">
-        Probability to succeed is <span id="percent"></span>% and the average result is <span id="average"></span>
+        Probability to succeed is <span id="percent"></span>% and the average result is <span id="average"></span> and <span class="help" title="Standard Deviation">σ <span id="std_deviation"></span></span>
     </div>
     <form>
         <span class="tn_wrap"><label for="target" title="TN to hit">Target Number</label><input type="number" min="1" max="110" id="target" value="15"></span>
