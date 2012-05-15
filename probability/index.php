@@ -9,12 +9,12 @@ try {
 	 * removed by the trim() when processing the results. This because the default result.
 	 */
 	$database = new PDO('mysql:host=127.0.0.1;dbname=l5r', 'root', '');
-	$results[' '] = $database->query('select * from `explode_no_emphasis` where `result` < 111 order by `roll`');
-	$results['e'] = $database->query('select * from `explode_and_emphasis` where `result` < 111 order by `roll`');
-	$results['ne'] = $database->query('select * from `no_explode_no_emphasis` where `result` < 111 order by `roll`');
-	$results['e_ne'] = $database->query('select * from `no_explode_and_emphasis` where `result` < 111 order by `roll`');
-	$results['_e9'] = $database->query('select * from `explode_9_10_no_emphasis` where `result` < 111 order by `roll`');
-	$results['e_e9'] = $database->query('select * from `explode_9_10_and_emphasis` where `result` < 111 order by `roll`');
+	$results[' ']    = $database->query('select * from `explode_no_emphasis` where `result` < 111 order by `roll`;');
+	$results['e']    = $database->query('select * from `explode_and_emphasis` where `result` < 111 order by `roll`;');
+	$results['ne']   = $database->query('select * from `no_explode_no_emphasis` where `result` < 111 order by `roll`;');
+	$results['e_ne'] = $database->query('select * from `no_explode_and_emphasis` where `result` < 111 order by `roll`;');
+	$results['_e9']  = $database->query('select * from `explode_9_10_no_emphasis` where `result` < 111 order by `roll`;');
+	$results['e_e9'] = $database->query('select * from `explode_9_10_and_emphasis` where `result` < 111 order by `roll`;');
 	$database = null;
 } catch (PDOException $e) {
     /* 
@@ -26,12 +26,11 @@ try {
 // Process the database queries
 foreach ($results as $key=>$part) {
     foreach ($part as $result) {
-        $type = trim($result['roll'] . 'k' . $result['keep'] . $key);
-        $processed_results[$type][$result['result']] = $result['count']*1;
-        $sums[$type] = calculate_sums($processed_results[$type]);
+        $roll_type = trim($result['roll'] . 'k' . $result['keep'] . $key);
+        $processed_results[$roll_type][$result['result']] = $result['count']*1;
+        $sums[$roll_type] = calculate_sums($processed_results[$roll_type]);
     }
 }
-
 
 // Calculates sums by taking each DB query result and adding to the $sums array
 function calculate_sums($numbers) {
@@ -42,58 +41,68 @@ function calculate_sums($numbers) {
     return $sum;
 }
 
-/* 
- * Creates an array with our data to use with on page Javascript.
+
+/*
+ * Combines all major calculations for speed.
  *
- * If less than ten rolls in the row have a result there are so few that effectively a 
- * zero will work. We therefore return a 0 because JS might choke on extremely small 
- * floats otherwise. Returns the percentage value in a list.
+ * There are simply too many iterations over the thousands results and
+ * millions of rolls otherwise. If I later find that this still leads to
+ * unwanted slowdowns I might consider generating a static page. While letting a
+ * cron job update it now and then.
+ *
  */
-function build_array($result, $sum) {
-    $return = '[';
-    foreach ($result as $result=>$rolls) {
-        if ($rolls > 10) {
-            $return .= '[' . $result . ',' . $rolls/$sum*100 . '],';
-        } else {
-            $return .= '[' . $result . ',0],';
-        }
-    }
-    $return .= ']';
-    return $return;
-}
-
-// Returns the average result (rounded to one decimal) of the roll
-function calculate_average($results, $sum) {
-    $total = 0;
-    foreach ($results as $result=>$rolls) {
-        $total =  $total + ($result*$rolls);
-    }
-    return round($total/$sum, 1);
-}
-
-// Returns the standard deviations or each result (rounded to one decimal) of the roll
-function calculate_std_deviation($results, $sum) {
+foreach ($processed_results as $roll_type=>$results) {
     $diff_sum = 0;
     $total = 0;
-    
-    // First calculate mean
-    foreach ($results as $result=>$rolls) {
-         $total =  $total + ($result*$rolls);
-     }
-     $mean = $total/$sum;
-     
-     // Then calculate the difference from the mean
-     foreach ($results as $result=>$rolls) {
-         // a number of times equal to $rolls, do this with $result
-         for ($i = 0; $i < $rolls; $i++) {
-             // Then calculate mean of $diff_array
-             $diff_sum = $diff_sum+pow($result-$mean, 2);
-         }
-     }
 
-    // Return the square root of the average of 
-    return round(sqrt($diff_sum/$sum), 2);
+    $js_array[$roll_type] = '[';
+    foreach ($results as $result=>$rolls) {        
+        /* 
+         * Creates an array with our data to use with on page Javascript.
+         *
+         * If less than ten rolls in the row have a result there are so few that effectively a 
+         * zero will work. We therefore return a 0 because JS might choke on extremely small 
+         * floats otherwise. Saves the percentage value in a list.
+         *
+         */
+        $total =  $total + ($result * $rolls);
+
+        if ($rolls > 10) {
+            $js_array[$roll_type] .= '[' . $result . ',' . $rolls/$sums[$roll_type]*100 . '],';
+        } else {
+            $js_array[$roll_type] .= '[' . $result . ',0],';
+        }
+
+    }
+    $js_array[$roll_type] .= ']';
+
+    // Calculate averages. Saves the average result (rounded to one decimal) of the roll
+    $averages[$roll_type] = round($total/$sums[$roll_type], 1);
+    
+    /*
+     * Saves the standard deviations or each result (rounded to one decimal) of the roll
+     * a number of times equal to $rolls, do this with $result
+     *
+     * Then calculate mean of $diff_array
+     * Then calculate the difference from the mean
+     */
+    $diff_sum = $diff_sum + $rolls * (pow($rolls * $result - $averages[$roll_type], 2));
+    
+    // Save the square root of the average of the diffs, rounded to one decimal
+    $standard_deviations[$roll_type] = round(sqrt($diff_sum / $sums[$roll_type]), 1);
 }
+
+
+/*
+ * Prints the contents of a JS-compatible dictionary. takes a regular PHP array
+ *
+ */
+function print_js_dict($array) {
+    foreach ($array as $key=>$part) {
+        echo "\t\t\t\t'" , $key , "' : " , $part , ",\n";
+    }
+}
+
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -256,29 +265,19 @@ function calculate_std_deviation($results, $sum) {
             
             // Averages
             $.data.averages = {
-<?php
-                    foreach ($processed_results as $key=>$result) {
-                        echo "\t\t\t\t'" , $key , "' : " , calculate_average($result, $sums[$key]) , ",\n";
-                    }?>
-                        };
+<?php           print_js_dict($averages); ?>
+            };
 
             // Standard deviations
             $.data.std_deviations = {
-<?php
-                    foreach ($processed_results as $key=>$result) {
-                        echo "\t\t\t\t'" , $key , "' : " , calculate_std_deviation($result, $sums[$key]) , ",\n";
-                    }?>
-                        };
+<?php           print_js_dict($standard_deviations); ?>
+            };
 
-            // Non emphasis
+            // Coordinates
             $.data.plots = {
-<?php
-                    foreach ($processed_results as $key=>$result) {
-                        echo "\t\t\t\t'" , $key , "' : " , build_array($result, $sums[$key]) , ",\n";
-                    }?>
-                        };
-
-
+<?php           print_js_dict($js_array); ?>
+            };
+            
             // Builds the navigation buttons
             $.each($.data.plots, function(value) {
 
