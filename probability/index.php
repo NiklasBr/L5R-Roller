@@ -180,7 +180,7 @@ function print_js_dict($array) {
                 $(this).addClass('active');
                 $('#navigation input').not(this).removeClass('active');
 
-                results_plot.title.text = "Rolling " + $(this).attr("data-roll") + ', exploding dice';
+                results_plot.title.text = "Rolling " + $(this).attr("data-roll").replace(/k/, " keeping ") + ' dice';
                 calc_perc_and_avg($("#target").val());
 //                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
 //                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
@@ -358,7 +358,7 @@ function print_js_dict($array) {
             }
             calc_perc_and_avg($("#target").val());
             var results_plot = $.jqplot("chart", [$.data.plots[get_context()]], $.data.rollDefaults);
-            results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll") + ', exploding dice';
+            results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll").replace(/k/, " keeping ") + ' dice';
 //            results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
 //            results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
             results_plot.replot();
