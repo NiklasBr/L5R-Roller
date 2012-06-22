@@ -54,17 +54,17 @@ function calculate_sums($numbers) {
 foreach ($processed_results as $roll_type=>$results) {
     $diff_sum = 0;
     $total = 0;
-
     $js_array[$roll_type] = '[';
+
+    /* 
+     * Creates an array with our data to use with on page Javascript.
+     *
+     * If less than ten rolls in the row have a result there are so few that effectively a
+     * zero will work. We therefore return a 0 because JS might choke on extremely small
+     * floats otherwise. Saves the percentage value in a list.
+     *
+     */
     foreach ($results as $result=>$rolls) {
-        /* 
-         * Creates an array with our data to use with on page Javascript.
-         *
-         * If less than ten rolls in the row have a result there are so few that effectively a
-         * zero will work. We therefore return a 0 because JS might choke on extremely small
-         * floats otherwise. Saves the percentage value in a list.
-         *
-         */
         $total = $total + ($result * $rolls);
 
         if ($rolls > 10) {
@@ -99,7 +99,7 @@ foreach ($processed_results as $roll_type=>$results) {
 
 
 /*
- * Prints the contents of a JS-compatible dictionary. takes a regular PHP array
+ * Prints the contents of a JS-compatible dictionary. Takes a regular PHP array
  *
  */
 function print_js_dict($array) {
@@ -112,8 +112,7 @@ function print_js_dict($array) {
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <!--
-        Curious, eh? Nice!
+    <!--Curious, eh? Nice!
         Want to fork and build your own version? Have a look at https://github.com/NiklasBr/L5R-Roller
         Come back soon. You are the best!
 
@@ -125,8 +124,7 @@ function print_js_dict($array) {
     <script type="text/javascript" src="/jquery.js"></script>
     <script type="text/javascript" src="jquery.jqplot.min.js"></script>
     <script type="text/javascript" src="plugins/jqplot.logAxisRenderer.min.js"></script>
-    <script type="text/javascript" 
-    src="plugins/jqplot.canvasTextRenderer.min.js"></script>
+    <script type="text/javascript" src="plugins/jqplot.canvasTextRenderer.min.js"></script>
     <script type="text/javascript" src="plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
     <script type="text/javascript" src="plugins/jqplot.canvasOverlay.min.js"></script>
     <script type="text/javascript">
