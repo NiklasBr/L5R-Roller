@@ -156,10 +156,19 @@ function print_js_dict($array) {
                     }
                 }
             }
+            
+            // Get and return the type of plot that will be displayed in the graph
+            function get_plot() {
+                if ($("#cumulative").is(":checked")) {
+                    return $.data.plots_cumulative[get_context()];
+                } else {
+                    return $.data.plots[get_context()];
+                }
+            }
 
             // Updates the interface with the selected data
             function calc_perc_and_avg(break_at) {
-                var current_data = $.data.plots[get_context()];
+                var current_data = get_plot();
                 var divided_data = current_data.slice((break_at-1), current_data.length);
 
                 var sum = 0;
@@ -182,7 +191,7 @@ function print_js_dict($array) {
                 calc_perc_and_avg($("#target").val());
 //                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
 //                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
-                results_plot.series[0].data = $.data.plots[get_context()];
+                results_plot.series[0].data = get_plot();
                 results_plot.replot();
 
                 // Update link for permalinks to certain rolls
@@ -197,11 +206,11 @@ function print_js_dict($array) {
             });
 
             // Looks for changes in the emphasis and explode check boxes
-            $(document).on('change', '#emphasis, #explode, #explode_9_and_10', function() {
+            $(document).on('change', '#emphasis, #explode, #explode_9_and_10, #cumulative', function() {
                 calc_perc_and_avg($("#target").val());
 //                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
 //                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
-                results_plot.series[0].data = $.data.plots[get_context()];
+                results_plot.series[0].data = get_plot();
                 results_plot.replot();
             });
 
@@ -280,18 +289,32 @@ function print_js_dict($array) {
 
             // Averages
             $.data.averages = {
-<?php           print_js_dict($averages); ?>
+                <?php print_js_dict($averages); ?>
             };
 
             // Standard deviations
             $.data.std_deviations = {
-<?php           print_js_dict($standard_deviations); ?>
+                <?php print_js_dict($standard_deviations); ?>
             };
 
             // Coordinates
             $.data.plots = {
-<?php           print_js_dict($js_array); ?>
+                <?php print_js_dict($js_array); ?>
             };
+            
+            // Create cumulative coordinates
+            // These might move to the PHP part later depending on 
+            // bandwidth/processing considerations
+            $.data.plots_cumulative = new Object;
+            $.each($.data.plots, function(rollType, theResults) {
+                var newList = [];
+                var savedRoll = 0;
+                for (var i = 0; i < theResults.length; i++) {
+                    savedRoll = savedRoll + theResults[i][1];
+                    newList.push([theResults[i][0], 100-savedRoll]);
+                }
+                $.data.plots_cumulative[rollType] = newList;
+            });
 
             // Builds the navigation buttons
             $.each($.data.plots, function(value) {
@@ -355,7 +378,7 @@ function print_js_dict($array) {
                 $("#navigation input:first").addClass("active");
             }
             calc_perc_and_avg($("#target").val());
-            var results_plot = $.jqplot("chart", [$.data.plots[get_context()]], $.data.rollDefaults);
+            var results_plot = $.jqplot("chart", [get_plot()], $.data.rollDefaults);
             results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll").replace(/k/, " keeping ") + ' dice';
 //            results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
 //            results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
@@ -377,6 +400,7 @@ function print_js_dict($array) {
             <span class="extra_options">
                 <span class="check_wrap"><label for="explode">Explode</label><input type="checkbox" id="explode" checked></span>
                 <span class="check_wrap"><label for="explode_9_and_10">Explode on 9 and 10</label><input type="checkbox" id="explode_9_and_10"></span>
+                <span class="check_wrap"><label for="cumulative">Cumulative graph</label><input type="checkbox" id="cumulative"></span>
             </span>
         </span>
     </form>
