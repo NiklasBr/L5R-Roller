@@ -121,7 +121,7 @@ function print_js_dict($array) {
     <title>L5R Roll and Keep Probabilities</title>
     <link rel="stylesheet" type="text/css" href="/style.css">
     <script type="text/javascript" src="/jquery.js"></script>
-    <script type="text/javascript" src="flotr/flotr2.js"></script>
+    <script type="text/javascript" src="flotr/flotr2.min.js"></script>
     <script type="text/javascript">
         $(document).ready( function() {
             // If JS is active, hide any warnings
