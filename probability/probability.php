@@ -122,11 +122,7 @@ function print_js_dict($array) {
     <link rel="stylesheet" type="text/css" href="/style.css">
     <link rel="stylesheet" type="text/css" href="jquery.jqplot.min.css">
     <script type="text/javascript" src="/jquery.js"></script>
-    <script type="text/javascript" src="jquery.jqplot.min.js"></script>
-    <script type="text/javascript" src="plugins/jqplot.logAxisRenderer.min.js"></script>
-    <script type="text/javascript" src="plugins/jqplot.canvasTextRenderer.min.js"></script>
-    <script type="text/javascript" src="plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
-    <script type="text/javascript" src="plugins/jqplot.canvasOverlay.min.js"></script>
+    <script type="text/javascript" src="flotr/flotr2.js"></script>
     <script type="text/javascript">
         $(document).ready( function() {
             // If JS is active, hide any warnings
@@ -172,12 +168,16 @@ function print_js_dict($array) {
                 var divided_data = current_data.slice((break_at-1), current_data.length);
 
                 var sum = 0;
-                for (var count = 0; count < divided_data.length; count++) {
-                    sum = sum + divided_data[count][1];
+                for (var i = 0; i < divided_data.length; i++) {
+                    sum = sum + divided_data[i][1];
                 }
 
                 // Updates visible numbers
-                $("#percent").text(Math.round(sum));
+                if ($("#cumulative").is(":checked")) {
+                    $("#percent").text(Math.round(current_data[break_at-1][1]));
+                } else {
+                    $("#percent").text(Math.round(sum));
+                }
                 $("#average").text($.data.averages[get_context()]);
                 $("#std_deviation").text($.data.std_deviations[get_context()]);
             }
@@ -187,13 +187,10 @@ function print_js_dict($array) {
                 $(this).addClass('active');
                 $('#navigation input').not(this).removeClass('active');
 
-                results_plot.title.text = "Rolling " + $(this).attr("data-roll").replace(/k/, " keeping ") + ' dice';
+                graph_options.title = "Rolling " + $(this).attr("data-roll").replace(/k/, " keeping ") + ' dice';
                 calc_perc_and_avg($("#target").val());
-//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
-//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
-                results_plot.series[0].data = get_plot();
-                results_plot.replot();
 
+                Flotr.draw(document.getElementById("chart"), { data : get_plot() }, graph_options);
                 // Update link for permalinks to certain rolls
                 document.location.hash = $('#navigation input.active').attr("data-roll");
             });
@@ -201,91 +198,46 @@ function print_js_dict($array) {
             // Looks for changes in the TN input box
             $(document).on('input', '#target', function() {
                 calc_perc_and_avg($(this).val());
-                results_plot.plugins.canvasOverlay.get("target_number").options.x = $("#target").val();
-                results_plot.replot();
+//                results_plot.plugins.canvasOverlay.get("target_number").options.x = $("#target").val();
+//                results_plot.replot();
+                Flotr.draw(document.getElementById("chart"), { data : get_plot() }, graph_options);
             });
 
             // Looks for changes in the emphasis and explode check boxes
             $(document).on('change', '#emphasis, #explode, #explode_9_and_10, #cumulative', function() {
                 calc_perc_and_avg($("#target").val());
-//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
-//                results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
-                results_plot.series[0].data = get_plot();
-                results_plot.replot();
+                Flotr.draw(document.getElementById("chart"), { data : get_plot() }, graph_options);
             });
 
-            $.data.averages = {};
-            $.data.plots = {};
-            $.data.rollDefaults = {
-                title: 'Graph',
-                seriesDefaults:
-                        {
-                            fill: true,
-                            color: "#123564",
-                            shadow: false,
-                        },
-                grid:
-                    {
-                        background: "#fff",
-                        borderColor: '#ddd',
-                        borderWidth: 1.0,
-                        gridLineColor: '#ddd',
-                        shadow: false,
-                    },
-                canvasOverlay:
-                            {
-                                show: true,
-                                objects: [
-                                        {verticalLine: {
-                                            name: "target_number",
-                                            x: $("#target").val(),
-                                            color: "rgba(211, 144, 57, 0.6)",
-                                            yOffset: 0,
-                                            shadow: false,
-                                            showTooltip: true,
-                                            tooltipFormatString: "TN: %'d",
-                                            showTooltipPrecision: 0.5
-                                        }},
-//                                         {verticalLine: {
-//                                             name: "standard_deviation",
-//                                             x: 0,
-//                                             color: "rgba(150, 150, 150, 0.3)",
-//                                             yOffset: 0,
-//                                             shadow: false,
-//                                             showTooltip: true,
-//                                             tooltipFormatString: "± one standard deviation",
-//                                             showTooltipPrecision: 0.5
-//                                         }},
-                                        ]
-                            },
-                axesDefaults:
-                            {
-                                labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
-                                pad: 0, 
-                                tickOptions:
-                                            {
-                                                formatString: "%d"
-                                            },
-                            },
-                axes:
-                    {
-                        yaxis:
-                            {
-                                label: "%",
-                                min: 0, 
-                                ticks: [0,5,10,15,20,{value:23, showLabel:false, showMark:false, showGridline:false}],
-                            },
-                        xaxis:
-                            {
-                                label: "Result",
-                                min: 1,
-                                max: 110,
-                                ticks: [1,5,10,15,20,25,30,35,40,45,50,
-                                55,60,65,70,75,80,85,90,95,100,
-                                105,110]
-                            }
-                    } // End axes settings
-            } // End plot data & settings
+            var graph_options = {
+                title : "Graph",
+                fontColor : "#5e5e5e",
+                lines : {
+                    show : true,
+                    color : '#123564',
+                    fillColor : "#123564",
+                    fill : true
+                },
+                xaxis : {
+                    ticks : [1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110],
+                    title : "Result",
+                    min : 1,
+                    max : 110
+                },
+                yaxis : {
+                    ticks : [0,5,10,15,20],
+                    title : "%",
+                    min : 0,
+                    max : 23,
+//                    scaling : 'logarithmic',
+//                    transform :  function(v) {return Math.log(v+0.1); /*move away from zero*/}, 
+                    tickDecimals: 3,
+                },
+                grid : {
+                    color : '#5e5e5e',
+                    backgroundColor : '#fff'
+                }
+            };
 
             // Averages
             $.data.averages = {
@@ -302,8 +254,7 @@ function print_js_dict($array) {
                 <?php print_js_dict($js_array); ?>
             };
             
-            // Create cumulative coordinates
-            // These might move to the PHP part later depending on 
+            // Create cumulative coordinates. These might move to the PHP part later depending on 
             // bandwidth/processing considerations
             $.data.plots_cumulative = new Object;
             $.each($.data.plots, function(rollType, theResults) {
@@ -378,12 +329,9 @@ function print_js_dict($array) {
                 $("#navigation input:first").addClass("active");
             }
             calc_perc_and_avg($("#target").val());
-            var results_plot = $.jqplot("chart", [get_plot()], $.data.rollDefaults);
-            results_plot.title.text = "Rolling " + $('#navigation input.active').attr("data-roll").replace(/k/, " keeping ") + ' dice';
-//            results_plot.plugins.canvasOverlay.get("standard_deviation").options.x = $.data.averages[get_context()];
-//            results_plot.plugins.canvasOverlay.get("standard_deviation").options.lineWidth = $.data.std_deviations[get_context()];
-            results_plot.replot();
-
+            graph_options.title = "Rolling " + $('#navigation input.active').attr("data-roll").replace(/k/, " keeping ") + ' dice';
+            Flotr.draw(document.getElementById("chart"), { data : get_plot() }, graph_options);
+            console.log(get_plot());
         });
     </script>
 </head>
