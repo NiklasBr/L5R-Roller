@@ -120,7 +120,6 @@ function print_js_dict($array) {
     -->
     <title>L5R Roll and Keep Probabilities</title>
     <link rel="stylesheet" type="text/css" href="/style.css">
-    <link rel="stylesheet" type="text/css" href="jquery.jqplot.min.css">
     <script type="text/javascript" src="/jquery.js"></script>
     <script type="text/javascript" src="flotr/flotr2.js"></script>
     <script type="text/javascript">
