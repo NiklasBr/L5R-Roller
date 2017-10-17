@@ -96,7 +96,7 @@ foreach ($processed_results as $roll_type=>$results) {
  */
 function print_js_dict($array) {
     foreach ($array as $key=>$part) {
-        echo "                '" , $key , "' : " , $part , ",\n";
+        echo "                '{$key}' : {$part},\n";
     }
 }
 
