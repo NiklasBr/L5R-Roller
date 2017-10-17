@@ -24,23 +24,15 @@ try {
 }
 
 // Process the database queries
+// Calculates sums by taking each DB query result and adding to the $sums array
+$processed_results = [];
 foreach ($results as $key=>$part) {
     foreach ($part as $result) {
         $roll_type = trim($result['roll'] . 'k' . $result['keep'] . $key);
-        $processed_results[$roll_type][$result['result']] = $result['count']*1;
-        $sums[$roll_type] = calculate_sums($processed_results[$roll_type]);
+        $processed_results[$roll_type][$result['result']] = (int) $result['count'];
+        $sums[$roll_type] = array_sum($processed_results[$roll_type]);
     }
 }
-
-// Calculates sums by taking each DB query result and adding to the $sums array
-function calculate_sums($numbers) {
-    $sum = 0;
-    foreach ($numbers as $number) {
-        $sum = $number + $sum;
-    }
-    return $sum;
-}
-
 
 /*
  * Combines all major calculations for speed.
