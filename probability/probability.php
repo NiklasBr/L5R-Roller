@@ -321,7 +321,6 @@ function print_js_dict($array) {
             calc_perc_and_avg($("#target").val());
             graph_options.title = "Rolling " + $('#navigation input.active').attr("data-roll").replace(/k/, " keeping ") + ' dice';
             Flotr.draw(document.getElementById("chart"), { data : get_plot() }, graph_options);
-            console.log(get_plot());
         });
     </script>
 </head>
