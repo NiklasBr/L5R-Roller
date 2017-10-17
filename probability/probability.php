@@ -57,7 +57,7 @@ foreach ($processed_results as $roll_type=>$results) {
     $js_array[$roll_type] = '[';
 
     /* 
-     * Creates an array with our data to use with on page Javascript.
+     * Creates an array with our data to use with on-page JavaScript.
      *
      * If less than ten rolls in the row have a result there are so few that effectively a
      * zero will work. We therefore return a 0 because JS might choke on extremely small
@@ -115,8 +115,7 @@ function print_js_dict($array) {
     <!--Curious, eh? Nice!
         Want to fork and build your own version? Have a look at https://github.com/NiklasBr/L5R-Roller
         Come back soon. You are the best!
-
-        // Niklas Brunberg, fyrkantigt.se/en/projekt/wikipics
+        // Niklas Brunberg
     -->
     <title>L5R Roll and Keep Probabilities</title>
     <link rel="stylesheet" type="text/css" href="/style.css">
